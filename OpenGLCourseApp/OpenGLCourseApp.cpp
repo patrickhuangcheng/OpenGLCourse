@@ -4,11 +4,15 @@
 
 #include <GL\glew.h>
 #include <GLFW\glfw3.h>
-#include "glm/mat4x4.hpp"
+#include "glm\mat4x4.hpp"
+
+#include "glm\glm.hpp"
+#include "glm\gtc\matrix_transform.hpp"
+#include "glm\gtc\type_ptr.hpp"
 
 const GLint WIDTH = 800, HEIGHT = 600;
 
-GLuint VAO, VBO, shader, uniformXMove;
+GLuint VAO, VBO, shader, uniformModel;
 
 bool direction = true;
 float triOffset = 0.0f;
@@ -21,11 +25,11 @@ static const char* vShader = "									\n\
 																\n\
 layout (location  = 0) in vec3 pos;								\n\
 																\n\
-uniform float xMove;											\n\
+uniform mat4 model;												\n\
 																\n\
 void main()														\n\
 {																\n\
-	gl_Position = vec4(0.4 * pos.x + xMove, 0.4 * pos.y, pos.z, 1.0);	\n\
+	gl_Position = model * vec4(0.4 * pos.x, 0.4 * pos.y, pos.z, 1.0);	\n\
 }";
 
 // Fragment Shader
@@ -122,7 +126,7 @@ void CompileShaders()
 		return;
 	}
 	// Bind the variable uniformXMove with the variable xMove inside the Vertice Shader
-	uniformXMove = glGetUniformLocation(shader, "xMove");
+	uniformModel = glGetUniformLocation(shader, "model");
 }
 
 int main()
@@ -198,8 +202,12 @@ int main()
 		glClear(GL_COLOR_BUFFER_BIT);
 
 		glUseProgram(shader);
-		// Affect uniformXMove binded with the shader with triOffset as the variable.
-		glUniform1f(uniformXMove, triOffset);
+
+		glm::mat4 model(1.0f);
+		model = glm::translate(model, glm::vec3(triOffset, triOffset, 0.0f));
+
+		// Affect uniformModel binded with the shader with model as the variable.
+		glUniformMatrix4fv(uniformModel, 1, GL_FALSE, glm::value_ptr(model));
 
 		glBindVertexArray(VAO);
 		glDrawArrays(GL_TRIANGLES, 0, 3);
