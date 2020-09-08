@@ -55,7 +55,11 @@ void CreateTriangle()
 
 void AddShader(GLuint theProgram, const char* shaderCode, GLenum shaderType)
 {
-	return;
+	GLuint theShader = glCreateShader(shaderType);
+
+	const GLchar* theCode[1];
+	theCode[0] = shaderCode;
+
 }
 
 void CompileShaders()
@@ -82,7 +86,15 @@ void CompileShaders()
 		printf("Error linking program: '%s'\n", eLog);
 		return;
 	}
-	// Need to validate program
+	
+	glValidateProgram(shader);
+	glGetProgramiv(shader, GL_VALIDATE_STATUS, &result);
+	if (!result)
+	{
+		glGetProgramInfoLog(shader, sizeof(eLog), NULL, eLog);
+		printf("Error linking program: '%s'\n", eLog);
+		return;
+	}
 }
 
 int main()
