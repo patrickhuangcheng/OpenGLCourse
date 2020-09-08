@@ -1,6 +1,5 @@
-// OpenGLCourseApp.cpp : This file contains the 'main' function. Program execution begins and ends there.
-//
-#include <iostream>
+#include <stdio.h>
+#include <string.h>
 
 #include <GL\glew.h>
 #include <GLFW\glfw3.h>
@@ -11,7 +10,7 @@ GLuint VAO, VBO, shader;
 
 // Vertex Shader
 static const char* vShader = "									\n\
-#verstion 330													\n\
+#version 330													\n\
 																\n\
 layout (location  = 0) in vec3 pos;								\n\
 																\n\
@@ -22,13 +21,13 @@ void main()														\n\
 
 // Fragment Shader
 static const char* fShader = "									\n\
-#verstion 330													\n\
+#version 330													\n\
 																\n\
-layout(location = 0) in vec3 pos;								\n\
+out vec4 colour;                                                               \n\
 																\n\
 void main()														\n\
 {																\n\
-	color = vec4(1.0, 0.0, 1.0, 1.0);			\n\
+	colour = vec4(1.0, 0.0, 1.0, 1.0);			\n\
 }";
 void CreateTriangle()
 {
@@ -60,6 +59,24 @@ void AddShader(GLuint theProgram, const char* shaderCode, GLenum shaderType)
 	const GLchar* theCode[1];
 	theCode[0] = shaderCode;
 
+	GLint codeLength[1];
+	codeLength[0] = strlen(shaderCode);
+
+	glShaderSource(theShader, 1, theCode, codeLength);
+	glCompileShader(theShader);
+
+	GLint result = 0;
+	GLchar eLog[1024] = { 0 };
+
+	glGetShaderiv(theShader, GL_COMPILE_STATUS, &result);
+	if (!result)
+	{
+		glGetShaderInfoLog(theShader, 1024, NULL, eLog);
+		printf("Error compiling the %d shader: '%s'\n", shaderType, eLog);
+		return;
+	}
+
+	glAttachShader(theProgram, theShader);
 }
 
 void CompileShaders()
@@ -92,7 +109,7 @@ void CompileShaders()
 	if (!result)
 	{
 		glGetProgramInfoLog(shader, sizeof(eLog), NULL, eLog);
-		printf("Error linking program: '%s'\n", eLog);
+		printf("Error validating program: '%s'\n", eLog);
 		return;
 	}
 }
@@ -101,7 +118,7 @@ int main()
 {
 	if (!glfwInit())
 	{
-		std::cout << "GLFW init failed\n";
+		printf("GLFW initialization failed!");
 		glfwTerminate();
 		return 1;
 	}
@@ -143,6 +160,9 @@ int main()
 	// Setup Viewport size
 	glViewport(0, 0, bufferWidth, bufferHeight);
 
+	CreateTriangle();
+	CompileShaders();
+
 	// Loop until window closed
 	while (!glfwWindowShouldClose(mainWindow))
 	{
@@ -150,22 +170,19 @@ int main()
 		glfwPollEvents();
 
 		// Clear window
-		glClearColor(1.0f, 1.0f, 1.0f, 1.0f);
+		glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
 		glClear(GL_COLOR_BUFFER_BIT);
+
+		glUseProgram(shader);
+
+		glBindVertexArray(VAO);
+		glDrawArrays(GL_TRIANGLES, 0, 3);
+		glBindVertexArray(0);
+
+		glUseProgram(0);
 
 		glfwSwapBuffers(mainWindow);
 	}
 
 	return 0;
 }
-
-// Run program: Ctrl + F5 or Debug > Start Without Debugging menu
-// Debug program: F5 or Debug > Start Debugging menu
-
-// Tips for Getting Started: 
-//   1. Use the Solution Explorer window to add/manage files
-//   2. Use the Team Explorer window to connect to source control
-//   3. Use the Output window to see build output and other messages
-//   4. Use the Error List window to view errors
-//   5. Go to Project > Add New Item to create new code files, or Project > Add Existing Item to add existing code files to the project
-//   6. In the future, to open this project again, go to File > Open > Project and select the .sln file
